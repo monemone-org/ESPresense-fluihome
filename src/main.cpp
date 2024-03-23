@@ -124,6 +124,11 @@ void setupNetwork() {
     WiFi.setScanMethod(WIFI_ALL_CHANNEL_SCAN);
     GUI::Connected(false, false);
 
+#ifdef FLUIHOME
+    spurt("/wifi-ssid", WIFI_SSID);
+    spurt("/wifi-password", WIFI_PASSWORD);
+#endif
+
 #ifdef VERSION
     AsyncWiFiSettings.info("ESPresense Version: " + String(VERSION));
 #endif
@@ -134,11 +139,21 @@ void setupNetwork() {
     ethernetType = AsyncWiFiSettings.dropdown("eth", ethernetTypes, 0, "Ethernet Type");
 
     AsyncWiFiSettings.heading("MQTT <a href='https://espresense.com/configuration/settings#mqtt' target='_blank'>ℹ️</a>", false);
+
+#ifdef FLUIHOME
+    // [Mone] hardcode server connectivity info instead of prompting over insecure HTTP connection. 
+    mqttHost = MQTT_SERVER;
+    mqttPort = MQTT_PORT;
+    mqttUser = MQTT_USERNAME;
+    mqttPass = MQTT_PASSWORD;
+#else
     mqttHost = AsyncWiFiSettings.string("mqtt_host", DEFAULT_MQTT_HOST, "Server");
     mqttPort = AsyncWiFiSettings.integer("mqtt_port", DEFAULT_MQTT_PORT, "Port");
     mqttUser = AsyncWiFiSettings.pstring("mqtt_user", DEFAULT_MQTT_USER, "Username");
     mqttPass = AsyncWiFiSettings.pstring("mqtt_pass", DEFAULT_MQTT_PASSWORD, "Password");
-    discovery = AsyncWiFiSettings.checkbox("discovery", true, "Send to discovery topic");
+#endif //FLUIHOME
+
+    discovery = AsyncWiFiSettings.checkbox("discovery", DEFAULT_DISCOVERY, "Send to discovery topic");
     homeAssistantDiscoveryPrefix = AsyncWiFiSettings.string("discovery_prefix", DEFAULT_HA_DISCOVERY_PREFIX, "Home Assistant discovery topic prefix");
     publishTele = AsyncWiFiSettings.checkbox("pub_tele", true, "Send to telemetry topic");
     publishRooms = AsyncWiFiSettings.checkbox("pub_rooms", true, "Send to rooms topic");
@@ -174,12 +189,14 @@ void setupNetwork() {
 
     GUI::ConnectToWifi();
 
+#ifndef FLUIHOME
     AsyncWiFiSettings.heading("GPIO Sensors <a href='https://espresense.com/configuration/settings#gpio-sensors' target='_blank'>ℹ️</a>", false);
 
     BleFingerprintCollection::ConnectToWifi();
     Motion::ConnectToWifi();
     Switch::ConnectToWifi();
     Button::ConnectToWifi();
+#endif    
 
 #ifdef SENSORS
     DHT::ConnectToWifi();
@@ -390,6 +407,9 @@ void connectToMqtt() {
     mqttClient.setServer(mqttHost.c_str(), mqttPort);
     mqttClient.setWill(statusTopic.c_str(), 0, true, "offline");
     mqttClient.setCredentials(mqttUser.c_str(), mqttPass.c_str());
+#ifdef ASYNC_TCP_SSL_ENABLED
+    mqttClient.setSecure(false);
+#endif
     mqttClient.connect();
 }
 
@@ -519,6 +539,7 @@ void setup() {
 #if M5STICK
     AXP192::Setup();
 #endif
+
 
     GUI::Setup(true);
     BleFingerprintCollection::Setup();

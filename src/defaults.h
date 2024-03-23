@@ -26,6 +26,13 @@
 // Define the base topic for room detection. Usually "espresense"
 #define CHANNEL "espresense"
 
+#ifdef FLUIHOME
+// [Mone] hardcode server connectivity info instead of prompting over insecure HTTP connection. 
+#include "secret_config.h"
+
+#define DEFAULT_DISCOVERY  false
+
+#else
 // Replace with your MQTT Broker address
 #define DEFAULT_MQTT_HOST "mqtt.z13.org"
 
@@ -37,6 +44,7 @@
 
 // Replace with your MQTT Broker password
 #define DEFAULT_MQTT_PASSWORD ""
+#endif
 
 #define DEFAULT_HA_DISCOVERY_PREFIX "homeassistant"
 
@@ -74,6 +82,13 @@
 #define DEFAULT_I2C_BUS_2_SCL 21
 #define DEFAULT_I2C_BUS 1
 #else
+#ifdef M5ATOMS3
+#define DEFAULT_I2C_BUS_1_SDA 2
+#define DEFAULT_I2C_BUS_1_SCL 1
+#define DEFAULT_I2C_BUS_2_SDA 38
+#define DEFAULT_I2C_BUS_2_SCL 39
+#define DEFAULT_I2C_BUS 1
+#else
 #ifdef ESP32C3
 #define DEFAULT_I2C_BUS_1_SDA 19
 #define DEFAULT_I2C_BUS_1_SCL 18
@@ -86,6 +101,7 @@
 #define DEFAULT_I2C_BUS_2_SDA -1
 #define DEFAULT_I2C_BUS_2_SCL -1
 #define DEFAULT_I2C_BUS 1
+#endif
 #endif
 #endif
 #endif
@@ -113,12 +129,26 @@
 #define DEFAULT_LED1_TYPE 2
 #define DEFAULT_LED1_PIN 27
 #define DEFAULT_LED1_CNTRL Control_Type_Status
+#ifdef MATRIX
 #define DEFAULT_LED1_CNT 25
+#else
+#define DEFAULT_LED1_CNT 1
+#endif //MATRIX
 
 #define BUTTON 39
 #define BUTTON_PRESSED 0
 
 #define MAX_BRIGHTNESS 50 // M5Atom Matrix has a lower max brightness so it doesn't melt
+
+#elif defined M5ATOMS3
+
+#define DEFAULT_LED1_TYPE 2
+#define DEFAULT_LED1_PIN 35
+#define DEFAULT_LED1_CNTRL Control_Type_Status
+#define DEFAULT_LED1_CNT 1 //M5ATOMS3_LITE
+#define BUTTON 41
+#define BUTTON_PRESSED 0
+#define MAX_BRIGHTNESS 50
 
 #elif defined MACCHINA_A0
 
